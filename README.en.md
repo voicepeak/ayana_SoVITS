@@ -1,7 +1,7 @@
 # ayana_SoVITS
 
 Japanese voice clone of **Otonashi Ayana** fine-tuned with
-[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) **v2Pro**, runnable on **CPU**.
+[GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS) **v2Pro**, runs on **GPU (recommended) or CPU**.
 
 > Weights: <https://huggingface.co/Vociepeak/ayana_SoVITS>
 
@@ -13,13 +13,21 @@ was fine-tuned on Japanese only).
 - Long text is split into short chunks and concatenated → no truncated endings
   (GPT-SoVITS otherwise stops at `max_sec` or on a premature EOS)
 - Optional 15 kHz low-pass to remove the vocoder's high-frequency hiss
-- CPU-friendly (RTF ≈ 0.7–1.0)
+- Auto device: GPU if available (RTF ≈ 0.12 on a 4090), else CPU (RTF ≈ 0.7–1.0)
 
 ## Install
 1. Clone GPT-SoVITS and install its deps + `pretrained_models`.
 2. Put the fine-tuned weights in place:
    `GPT_weights_v2Pro/ayana-e14.ckpt`, `SoVITS_weights_v2Pro/ayana_e8_s672.pth`
-3. `pip install -r requirements.txt`
+3. Install torch (pick one), then the rest:
+   ```bash
+   # GPU (CUDA 12.4)
+   pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+   # or CPU
+   # pip install torch==2.5.1 torchaudio==2.5.1
+   pip install -r requirements.txt
+   ```
+   (On Windows, plain `pip install torch` from PyPI gives the CPU build.)
 4. Point the scripts at GPT-SoVITS via `AYANA_GSV_ROOT` (or place this repo next to it).
 
 ## Usage
@@ -29,6 +37,11 @@ python src/tts.py --text-file script.txt --out out.wav --speed 1.05
 ```
 Key settings: `temperature=0.6, top_p=0.6, top_k=20`, `lowpass 15kHz`,
 chunked synthesis for long text.
+
+Device is auto-detected; force CPU with `AYANA_DEVICE=cpu`. Benchmark:
+```bash
+python src/benchmark.py
+```
 
 ## Disclaimer
 Personal / research use only. The character and its voice belong to the original

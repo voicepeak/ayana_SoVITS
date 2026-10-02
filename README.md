@@ -43,10 +43,15 @@ GPT-SoVITS/SoVITS_weights_v2Pro/ayana_e8_s672.pth
 ```
 （从 Hugging Face 下载，见下）
 
-3) **安装本仓库依赖**
+3) **安装依赖（先选 torch：GPU 还是 CPU）**
 ```bash
+# GPU（推荐，如 RTX 4090/30 系）——先装 CUDA 版 torch
+pip install torch==2.5.1 torchaudio==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+# 纯 CPU 则用：
+# pip install torch==2.5.1 torchaudio==2.5.1
 pip install -r requirements.txt
 ```
+> ⚠️ Windows 上直接 `pip install torch`（走 PyPI）拿到的是 **CPU 版**；要用显卡必须按上面的 CUDA index 安装。
 
 4) **告诉脚本 GPT-SoVITS 在哪**（三选一）
 ```bash
@@ -83,16 +88,23 @@ huggingface-cli download Vociepeak/ayana_SoVITS --local-dir hf_ayana
 - `lowpass 15kHz`：去除高频电音；若嫌闷可 `--no-lowpass`。
 - 长文本请用 `tts.py` / `synth_long()`：分块合成再拼接，防止截断。
 
-## CPU 性能
-Intel Core Ultra 7 265K（20 核）实测：
+## 设备与性能（GPU / CPU）
+GPT-SoVITS **自动检测设备**：有 N 卡就用 GPU（fp16），否则 CPU——脚本无需改动。
 
-| 场景 | 耗时 |
-|---|---|
-| 首次一句（预热） | ~4–5s |
-| 之后每句 | **RTF ≈ 0.7–1.0**（≈实时～1.4×） |
-| 模型加载 | ~0.3s（缓存命中） |
+| 设备 | RTF（合成秒 / 音频秒） | 5s 语音耗时 |
+|---|---|---|
+| **RTX 4090** | **≈ 0.12** | ~0.6s |
+| CPU（Ultra 7 265K，20 核） | ≈ 0.7–1.0 | ~3.5–5s |
 
-适合离线 / 批量生成；实时对话建议使用 GPU。
+- 查看当前设备与实测：`python src/benchmark.py`
+- **强制 CPU**：设置环境变量 `AYANA_DEVICE=cpu`（或 `CUDA_VISIBLE_DEVICES=""`）
+- 实时对话 → 用 GPU；离线 / 批量 → CPU 亦可
+
+```bash
+python src/benchmark.py
+# [ayana] device=cuda (NVIDIA GeForce RTX 4090)
+#   #1 audio=3.86s synth=0.47s rtf=0.121 ...
+```
 
 ## 训练数据（简述）
 - 源素材：约 65 分钟日语单人语音
