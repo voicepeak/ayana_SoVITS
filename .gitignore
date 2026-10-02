@@ -1,0 +1,28 @@
+# outputs
+out*.wav
+*.mp3
+output/
+tmp/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# models / big files (hosted on Hugging Face)
+*.ckpt
+*.pth
+*.pt
+*.bin
+*.onnx
+pretrained_models/
+GPT_weights*/
+SoVITS_weights*/
+hf_ayana/
+
+# misc
+*.log
+.DS_Store
+Thumbs.db
