@@ -48,6 +48,9 @@ if GSV_ROOT is None:
     raise EnvironmentError(
         "GPT-SoVITS not found. Clone it and set env AYANA_GSV_ROOT to its path.")
 os.environ.setdefault("TORCH_FORCE_NO_WEIGHTS_ONLY_LOAD", "1")
+# Device: GPT-SoVITS auto-uses CUDA when available. Force CPU with AYANA_DEVICE=cpu.
+if os.environ.get("AYANA_DEVICE", "").strip().lower() == "cpu":
+    os.environ["CUDA_VISIBLE_DEVICES"] = ""
 sys.path.insert(0, GSV_ROOT)
 sys.path.insert(0, os.path.join(GSV_ROOT, "GPT_SoVITS"))
 _orig_cwd = os.getcwd()
@@ -70,6 +73,17 @@ REFTEXT = os.environ.get(
 _loaded = False
 
 
+def device_info():
+    """Return a short string describing the compute device in use."""
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "cuda (%s)" % torch.cuda.get_device_name(0)
+        return "cpu"
+    except Exception:
+        return "unknown"
+
+
 def load():
     """Load the fine-tuned GPT + SoVITS weights (idempotent)."""
     global _loaded
@@ -77,6 +91,7 @@ def load():
         change_gpt_weights(gpt_path=GPT)
         change_sovits_weights(sovits_path=SOVITS)
         _loaded = True
+        print("[ayana] device=%s" % device_info(), flush=True)
 
 
 def _to_float(a):
