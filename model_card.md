@@ -46,6 +46,10 @@ gen = list(get_tts_wav(
 sr, audio = gen[-1]
 ```
 
+## Device
+Runs on **GPU** (auto-detected, RTF ≈ 0.12 on an RTX 4090) or **CPU** (RTF ≈ 0.7–1.0).
+Force CPU with `AYANA_DEVICE=cpu`.
+
 ## Recommended settings
 - `temperature=0.6, top_p=0.6, top_k=20` (higher temperature causes premature EOS → dropped endings)
 - Split long text into ≤24-char chunks and concatenate (prevents `max_sec` truncation)
