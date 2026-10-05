@@ -126,7 +126,14 @@ def _lowpass(x, sr, cut):
 
 def synth(text, language="日文", speed=1.0, temperature=0.6,
           top_k=20, top_p=0.6, cut=15000):
-    """One short sentence -> (sr, float32 audio)."""
+    """One short sentence -> (sr, float32 audio).
+
+    Safety: passing several sentences to GPT-SoVITS at once makes it silently
+    drop the later ones, so any multi-sentence input is routed to synth_long().
+    """
+    if len(re.findall(r"[。！？!?]", text)) > 1:
+        return synth_long(text, language=language, speed=speed,
+                          temperature=temperature, cut=cut)
     load()
     gen = list(get_tts_wav(
         ref_wav_path=REF, prompt_text=REFTEXT, prompt_language=i18n("日文"),
