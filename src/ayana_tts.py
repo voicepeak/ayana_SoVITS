@@ -56,6 +56,15 @@ sys.path.insert(0, os.path.join(GSV_ROOT, "GPT_SoVITS"))
 _orig_cwd = os.getcwd()
 os.chdir(GSV_ROOT)  # GPT-SoVITS resolves model paths relative to its root
 
+# GPT-SoVITS auto-loads ./weight.json on import and crashes if it points to a
+# moved/deleted file. Remove it so our AYANA_* / default paths are always used.
+try:
+    _wj = os.path.join(GSV_ROOT, "weight.json")
+    if os.path.isfile(_wj):
+        os.remove(_wj)
+except Exception:
+    pass
+
 import numpy as np
 from scipy.signal import butter, sosfiltfilt
 from tools.i18n.i18n import I18nAuto
