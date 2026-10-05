@@ -109,7 +109,8 @@ python src/benchmark.py
 ## 训练数据（简述）
 - 源素材：约 65 分钟日语单人语音
 - 处理：Whisper large-v3 **词级时间戳** → 按词/句边界切片、去掉句内长静音 → 得 732 条干净切片 → 精选 490 条（句长 2–10s、语速正常）
-- 微调：GPT-SoVITS v2Pro，SoVITS 8 epoch + GPT 15 epoch
+- 切片首尾留余量（0.12s/0.16s），避免切掉尾音
+- 微调：GPT-SoVITS v2Pro，SoVITS 8 epoch + GPT 20 epoch
 
 ## 致谢
 - [GPT-SoVITS](https://github.com/RVC-Boss/GPT-SoVITS)（RVC-Boss）

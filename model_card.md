@@ -57,8 +57,9 @@ Force CPU with `AYANA_DEVICE=cpu`.
 - A 3–10 s reference clip + its exact transcript is required; it sets the tone
 
 ## Training
-- ~65 min single-speaker Japanese source → 732 clean clips → 490 curated (2–10 s)
-- SoVITS 8 epochs, GPT 15 epochs, on a single RTX 4090
+- ~65 min single-speaker Japanese source → 734 clean clips → 632 curated (2–10 s)
+- Clips are padded 0.12 s (head) / 0.16 s (tail) so final phonemes are never clipped
+- SoVITS 8 epochs, GPT 20 epochs, on a single RTX 4090
 
 ## Language
 Japanese only. Other languages are cross-lingual and unreliable.
