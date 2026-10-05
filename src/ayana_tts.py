@@ -67,8 +67,19 @@ i18n = I18nAuto()
 GPT = os.environ.get("AYANA_GPT", "GPT_weights_v2Pro/ayana-e14.ckpt")
 SOVITS = os.environ.get("AYANA_SOVITS", "SoVITS_weights_v2Pro/ayana_e8_s672.pth")
 REF = os.environ.get("AYANA_REF", os.path.join(REPO, "refs", "ref0308.wav"))
-REFTEXT = os.environ.get(
-    "AYANA_REF_TEXT", "私を芸能界デビューさせたいという人がいるのでしょう")
+
+
+def _ref_text():
+    t = os.environ.get("AYANA_REF_TEXT")
+    if t:
+        return t
+    companion = os.path.splitext(REF)[0] + ".txt"   # e.g. refs/xxx.wav -> refs/xxx.txt
+    if os.path.isfile(companion):
+        return open(companion, encoding="utf-8").read().strip()
+    return "私を芸能界デビューさせたいという人がいるのでしょう"
+
+
+REFTEXT = _ref_text()
 
 _loaded = False
 
