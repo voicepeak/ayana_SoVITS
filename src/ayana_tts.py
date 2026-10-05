@@ -133,6 +133,40 @@ def _lowpass(x, sr, cut):
     return sosfiltfilt(sos, x).astype(np.float32)
 
 
+def _limit_duration(a, sr, text):
+    """Cap runaway outputs.
+
+    The fine-tuned GPT occasionally fails to emit EOS on very short inputs
+    (a lone interjection), stretching them to the max_sec limit (tens of
+    seconds). Trim those back to a sane length with a short fade-out.
+    """
+    n = len(re.sub(r"[、。?!！？…，.\s]", "", text))
+    dur = len(a) / sr if sr else 0.0
+    exp = max(1.2, n * 0.6)
+    if n <= 8 and dur > exp + 3.0:
+        cap = exp + 0.8
+        a = np.ascontiguousarray(a[:int(cap * sr)])
+        f = int(0.03 * sr)
+        if f and len(a) > f:
+            a[-f:] = a[-f:] * np.linspace(1.0, 0.0, f, dtype=np.float32)
+    return a
+
+
+def normalize_text(t):
+    """Normalize punctuation that makes GPT-SoVITS misbehave.
+
+    Ellipses ('……' / '…') are interpreted as a prolongation marker: an
+    interjection followed by one (e.g. 'あ……') can stretch into a runaway
+    long vowel of tens of seconds. They are converted to commas here.
+    """
+    t = t.strip()
+    t = re.sub(r"[…‥]+", "，", t)            # ellipsis -> comma
+    t = re.sub(r"\.{2,}", "，", t)           # latin dotted ellipsis
+    t = re.sub(r"[～〜]+", "、", t)           # wave dash -> comma
+    t = re.sub(r"([！？!?。，、])\1+", r"\1", t)   # collapse repeats
+    return t
+
+
 def synth(text, language="日文", speed=1.0, temperature=0.6,
           top_k=20, top_p=0.6, cut=15000):
     """One short sentence -> (sr, float32 audio).
@@ -140,6 +174,7 @@ def synth(text, language="日文", speed=1.0, temperature=0.6,
     Safety: passing several sentences to GPT-SoVITS at once makes it silently
     drop the later ones, so any multi-sentence input is routed to synth_long().
     """
+    text = normalize_text(text)
     if len(re.findall(r"[。！？!?]", text)) > 1:
         return synth_long(text, language=language, speed=speed,
                           temperature=temperature, cut=cut)
@@ -149,7 +184,8 @@ def synth(text, language="日文", speed=1.0, temperature=0.6,
         text=text, text_language=i18n(language),
         top_k=top_k, top_p=top_p, temperature=temperature, speed=speed))
     sr, a = gen[-1]
-    return sr, _lowpass(_to_float(a), sr, cut)
+    a = _limit_duration(_to_float(a), sr, text)
+    return sr, _lowpass(a, sr, cut)
 
 
 def split_chunks(text, max_chars=24):
@@ -184,7 +220,7 @@ def synth_long(text, language="日文", speed=1.0, temperature=0.6,
     load()
     pieces = []
     sr = 32000
-    for c in split_chunks(text, max_chars):
+    for c in split_chunks(normalize_text(text), max_chars):
         try:
             sr, a = synth(c, language=language, speed=speed,
                           temperature=temperature, cut=cut)
